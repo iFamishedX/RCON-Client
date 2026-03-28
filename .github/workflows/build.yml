@@ -6,16 +6,14 @@ on:
       - main
   pull_request:
     types:
-      - opened
-      - synchronize
       - closed
     branches:
       - main
 
 jobs:
   build-and-release:
-    # Run on pushes, PR open/update, and merged PRs; skip unmerged PR closes
-    if: github.event_name == 'push' || (github.event_name == 'pull_request' && (github.event.action != 'closed' || github.event.pull_request.merged == true))
+    # For PRs, only run when the PR was actually merged
+    if: github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.pull_request.merged == true)
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -38,14 +36,12 @@ jobs:
 
       - name: Read mod version
         id: version
-        if: github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.pull_request.merged == true)
         run: |
           VERSION=$(grep "^mod_version" gradle.properties | cut -d'=' -f2 | tr -d ' ')
           echo "MOD_VERSION=$VERSION" >> "$GITHUB_OUTPUT"
 
       - name: Find built JAR
         id: jar
-        if: github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.pull_request.merged == true)
         run: |
           # Pick the mod JAR (exclude sources and dev jars)
           JAR=$(find build/libs -name "*.jar" \
@@ -59,7 +55,6 @@ jobs:
           echo "JAR_NAME=$(basename "$JAR")" >> "$GITHUB_OUTPUT"
 
       - name: Create GitHub Release
-        if: github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.pull_request.merged == true)
         uses: softprops/action-gh-release@v2.3.2
         with:
           tag_name: v${{ steps.version.outputs.MOD_VERSION }}
