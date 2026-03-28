@@ -62,7 +62,7 @@ jobs:
           body: |
             Automated release of RCON Client mod v${{ steps.version.outputs.MOD_VERSION }}.
 
-            **Fabric 1.21.1 — client-side only.**
+            **Fabric 1.21.11 — client-side only.**
 
             Drop the JAR into your `mods/` folder (Fabric Loader + Fabric API required).
           files: ${{ steps.jar.outputs.JAR_PATH }}
