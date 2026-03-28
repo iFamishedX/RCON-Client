@@ -1,0 +1,26 @@
+{
+  "schemaVersion": 1,
+  "id": "rconclient",
+  "version": "${version}",
+  "name": "RCON Client",
+  "description": "A client-side mod to allow RCON to be sent through chat.",
+  "authors": [
+    "iFamishedX"
+  ],
+  "contact": {
+    "sources": "https://github.com/iFamishedX/RCON-Client"
+  },
+  "license": "MIT",
+  "environment": "client",
+  "entrypoints": {
+    "client": [
+      "com.ifamishedx.rconclient.RconClientMod"
+    ]
+  },
+  "depends": {
+    "fabricloader": ">=0.16.0",
+    "minecraft": "~1.21.1",
+    "java": ">=21",
+    "fabric-api": "*"
+  }
+}

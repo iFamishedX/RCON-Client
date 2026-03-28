@@ -1,0 +1,69 @@
+name: Build and Release
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    types:
+      - closed
+    branches:
+      - main
+
+jobs:
+  build-and-release:
+    # For PRs, only run when the PR was actually merged
+    if: github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.pull_request.merged == true)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Java 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+
+      - name: Make gradlew executable
+        run: chmod +x ./gradlew
+
+      - name: Build mod
+        run: ./gradlew build
+
+      - name: Read mod version
+        id: version
+        run: |
+          VERSION=$(grep "^mod_version" gradle.properties | cut -d'=' -f2 | tr -d ' ')
+          echo "MOD_VERSION=$VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Find built JAR
+        id: jar
+        run: |
+          # Pick the mod JAR (exclude sources and dev jars)
+          JAR=$(find build/libs -name "*.jar" \
+            ! -name "*-sources.jar" \
+            ! -name "*-dev.jar" \
+            | head -1)
+          if [ -z "$JAR" ]; then
+            echo "ERROR: No JAR found in build/libs/" && ls build/libs/ && exit 1
+          fi
+          echo "JAR_PATH=$JAR" >> "$GITHUB_OUTPUT"
+          echo "JAR_NAME=$(basename "$JAR")" >> "$GITHUB_OUTPUT"
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2.3.2
+        with:
+          tag_name: v${{ steps.version.outputs.MOD_VERSION }}
+          name: RCON Client v${{ steps.version.outputs.MOD_VERSION }}
+          body: |
+            Automated release of RCON Client mod v${{ steps.version.outputs.MOD_VERSION }}.
+
+            **Fabric 1.21.1 — client-side only.**
+
+            Drop the JAR into your `mods/` folder (Fabric Loader + Fabric API required).
+          files: ${{ steps.jar.outputs.JAR_PATH }}
+          fail_on_unmatched_files: true
