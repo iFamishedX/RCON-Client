@@ -86,7 +86,7 @@ public class RconClientMod implements ClientModInitializer {
         Minecraft client = Minecraft.getInstance();
         client.execute(() -> {
             if (client.player != null) {
-                client.player.sendSystemMessage(text);
+                client.player.displayClientMessage(text, false);
             }
         });
     }
