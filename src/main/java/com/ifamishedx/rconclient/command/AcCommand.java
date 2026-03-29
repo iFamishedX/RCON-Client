@@ -5,10 +5,10 @@ import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandManager;
 import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.network.ClientPlayNetworkHandler;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.multiplayer.ClientPacketListener;
+import net.minecraft.network.chat.Component;
+import net.minecraft.ChatFormatting;
 
 /**
  * Registers the {@code /ac} command:
@@ -26,21 +26,21 @@ public class AcCommand {
                     // No arguments → switch to All Chat Mode
                     RconClientMod.getChatModeManager().disableRconMode();
                     ctx.getSource().sendFeedback(
-                            Text.literal("[RCON] Chat returned to normal").formatted(Formatting.YELLOW));
+                            Component.literal("[RCON] Chat returned to normal").withStyle(ChatFormatting.YELLOW));
                     return com.mojang.brigadier.Command.SINGLE_SUCCESS;
                 })
                 .then(ClientCommandManager.argument("message", StringArgumentType.greedyString())
                     .executes(ctx -> {
                         // With arguments → one-off chat message, no mode switch
                         String message = StringArgumentType.getString(ctx, "message");
-                        MinecraftClient client = MinecraftClient.getInstance();
-                        ClientPlayNetworkHandler network = client.getNetworkHandler();
+                        Minecraft client = Minecraft.getInstance();
+                        ClientPacketListener network = client.getConnection();
                         if (network == null) {
-                            ctx.getSource().sendError(Text.literal("Not connected to a server."));
+                            ctx.getSource().sendError(Component.literal("Not connected to a server."));
                             return 0;
                         }
                         // Send as normal chat (bypasses the RCON intercept)
-                        network.sendChatMessage(message);
+                        network.sendChat(message);
                         return com.mojang.brigadier.Command.SINGLE_SUCCESS;
                     }))
         );
