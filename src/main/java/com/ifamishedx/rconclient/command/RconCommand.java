@@ -7,8 +7,8 @@ import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandManager;
 import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
+import net.minecraft.network.chat.Component;
+import net.minecraft.ChatFormatting;
 
 import java.util.concurrent.CompletableFuture;
 
@@ -56,24 +56,24 @@ public class RconCommand {
                 ? "Connected to " + config.getHostPort()
                 : (config.getHostPort() != null ? "Disconnected (last: " + config.getHostPort() + ")" : "Not configured");
 
-        source.sendFeedback(Text.literal("--- RCON Client ---").formatted(Formatting.GOLD));
-        source.sendFeedback(Text.literal("/rcon parameter <host:port> <password>").formatted(Formatting.YELLOW)
-                .append(Text.literal(" – set parameters & connect").formatted(Formatting.GRAY)));
-        source.sendFeedback(Text.literal("/rc [command]").formatted(Formatting.YELLOW)
-                .append(Text.literal(" – RCON chat mode or one-off command").formatted(Formatting.GRAY)));
-        source.sendFeedback(Text.literal("/ac [message]").formatted(Formatting.YELLOW)
-                .append(Text.literal(" – normal chat mode or one-off message").formatted(Formatting.GRAY)));
-        source.sendFeedback(Text.literal("Status: ").formatted(Formatting.AQUA)
-                .append(Text.literal(status).formatted(client.isConnected() ? Formatting.GREEN : Formatting.RED)));
-        source.sendFeedback(Text.literal("Mode:   ").formatted(Formatting.AQUA)
-                .append(Text.literal(mode).formatted(Formatting.WHITE)));
+        source.sendFeedback(Component.literal("--- RCON Client ---").withStyle(ChatFormatting.GOLD));
+        source.sendFeedback(Component.literal("/rcon parameter <host:port> <password>").withStyle(ChatFormatting.YELLOW)
+                .append(Component.literal(" – set parameters & connect").withStyle(ChatFormatting.GRAY)));
+        source.sendFeedback(Component.literal("/rc [command]").withStyle(ChatFormatting.YELLOW)
+                .append(Component.literal(" – RCON chat mode or one-off command").withStyle(ChatFormatting.GRAY)));
+        source.sendFeedback(Component.literal("/ac [message]").withStyle(ChatFormatting.YELLOW)
+                .append(Component.literal(" – normal chat mode or one-off message").withStyle(ChatFormatting.GRAY)));
+        source.sendFeedback(Component.literal("Status: ").withStyle(ChatFormatting.AQUA)
+                .append(Component.literal(status).withStyle(client.isConnected() ? ChatFormatting.GREEN : ChatFormatting.RED)));
+        source.sendFeedback(Component.literal("Mode:   ").withStyle(ChatFormatting.AQUA)
+                .append(Component.literal(mode).withStyle(ChatFormatting.WHITE)));
     }
 
     private static int setParameters(FabricClientCommandSource source, String hostPort, String password) {
         // Parse host and port from "host:port"
         int colonIdx = hostPort.lastIndexOf(':');
         if (colonIdx <= 0 || colonIdx >= hostPort.length() - 1) {
-            source.sendError(Text.literal("Invalid format. Use host:port (e.g. localhost:25575)"));
+            source.sendError(Component.literal("Invalid format. Use host:port (e.g. localhost:25575)"));
             return 0;
         }
         String host = hostPort.substring(0, colonIdx);
@@ -81,11 +81,11 @@ public class RconCommand {
         try {
             port = Integer.parseInt(hostPort.substring(colonIdx + 1));
         } catch (NumberFormatException e) {
-            source.sendError(Text.literal("Invalid port number in: " + hostPort));
+            source.sendError(Component.literal("Invalid port number in: " + hostPort));
             return 0;
         }
         if (port < 1 || port > 65535) {
-            source.sendError(Text.literal("Port must be between 1 and 65535"));
+            source.sendError(Component.literal("Port must be between 1 and 65535"));
             return 0;
         }
 
@@ -99,16 +99,16 @@ public class RconCommand {
         // Apply to client and connect in background
         RconClient rcon = RconClientMod.getRconClient();
         rcon.setParameters(host, port, password);
-        source.sendFeedback(Text.literal("[RCON] Connecting to " + hostPort + "...").formatted(Formatting.YELLOW));
+        source.sendFeedback(Component.literal("[RCON] Connecting to " + hostPort + "...").withStyle(ChatFormatting.YELLOW));
 
         CompletableFuture.runAsync(() -> {
             boolean ok = rcon.connect();
             if (ok) {
                 RconClientMod.sendMessageToPlayer(
-                        Text.literal("[RCON] Connected and authenticated successfully!").formatted(Formatting.GREEN));
+                        Component.literal("[RCON] Connected and authenticated successfully!").withStyle(ChatFormatting.GREEN));
             } else {
                 RconClientMod.sendMessageToPlayer(
-                        Text.literal("[RCON] Connection failed – check host, port, and password.").formatted(Formatting.RED));
+                        Component.literal("[RCON] Connection failed – check host, port, and password.").withStyle(ChatFormatting.RED));
             }
         });
 

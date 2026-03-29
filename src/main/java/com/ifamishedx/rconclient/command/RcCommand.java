@@ -5,8 +5,8 @@ import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandManager;
 import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
+import net.minecraft.network.chat.Component;
+import net.minecraft.ChatFormatting;
 
 import java.util.concurrent.CompletableFuture;
 
@@ -26,7 +26,7 @@ public class RcCommand {
                     // No arguments → switch to RCON Chat Mode
                     RconClientMod.getChatModeManager().enableRconMode();
                     ctx.getSource().sendFeedback(
-                            Text.literal("[RCON] Chat redirected to RCON mode").formatted(Formatting.YELLOW));
+                            Component.literal("[RCON] Chat redirected to RCON mode").withStyle(ChatFormatting.YELLOW));
                     return com.mojang.brigadier.Command.SINGLE_SUCCESS;
                 })
                 .then(ClientCommandManager.argument("command", StringArgumentType.greedyString())
@@ -34,18 +34,18 @@ public class RcCommand {
                         // With arguments → one-off RCON command, no mode switch
                         String command = StringArgumentType.getString(ctx, "command");
                         ctx.getSource().sendFeedback(
-                                Text.literal("[RCON] Sending: " + command).formatted(Formatting.GRAY));
+                                Component.literal("[RCON] Sending: " + command).withStyle(ChatFormatting.GRAY));
 
                         CompletableFuture.runAsync(() -> {
                             String response = RconClientMod.getRconClient().sendCommand(command);
                             if (response == null) {
                                 RconClientMod.sendMessageToPlayer(
-                                        Text.literal("[RCON] Error – not connected. Use /rcon parameter first.")
-                                                .formatted(Formatting.RED));
+                                        Component.literal("[RCON] Error – not connected. Use /rcon parameter first.")
+                                                .withStyle(ChatFormatting.RED));
                             } else {
                                 String display = response.isEmpty() ? "(no response)" : response;
                                 RconClientMod.sendMessageToPlayer(
-                                        Text.literal("[RCON] " + display).formatted(Formatting.GREEN));
+                                        Component.literal("[RCON] " + display).withStyle(ChatFormatting.GREEN));
                             }
                         });
                         return com.mojang.brigadier.Command.SINGLE_SUCCESS;

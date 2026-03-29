@@ -4,9 +4,9 @@ import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallback;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientLifecycleEvents;
 import net.fabricmc.fabric.api.client.message.v1.ClientSendMessageEvents;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
+import net.minecraft.client.Minecraft;
+import net.minecraft.network.chat.Component;
+import net.minecraft.ChatFormatting;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -66,7 +66,7 @@ public class RconClientMod implements ClientModInitializer {
                     String display = (response != null && !response.isEmpty())
                             ? response
                             : "(no response)";
-                    sendMessageToPlayer(Text.literal("[RCON] " + display).formatted(Formatting.GREEN));
+                    sendMessageToPlayer(Component.literal("[RCON] " + display).withStyle(ChatFormatting.GREEN));
                 });
                 // Cancel normal chat
                 return false;
@@ -82,11 +82,11 @@ public class RconClientMod implements ClientModInitializer {
     }
 
     /** Send a text message to the local player's chat HUD (must be called from any thread). */
-    public static void sendMessageToPlayer(Text text) {
-        MinecraftClient client = MinecraftClient.getInstance();
+    public static void sendMessageToPlayer(Component text) {
+        Minecraft client = Minecraft.getInstance();
         client.execute(() -> {
             if (client.player != null) {
-                client.player.sendMessage(text, false);
+                client.player.sendSystemMessage(text);
             }
         });
     }
